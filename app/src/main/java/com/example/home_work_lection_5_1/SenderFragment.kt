@@ -11,8 +11,6 @@ import android.widget.Button
 import android.widget.CheckBox
 
 class SenderFragment : Fragment() {
-    val addToBackStack: CheckBox by lazy { requireView().findViewById(R.id.addToBackStackCheck) }
-    private val receiverFragment = ReceiverFragment()
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -67,6 +65,11 @@ class SenderFragment : Fragment() {
         Log.i("LifeCycle", "FragmentA: onSaveInstanceState")
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        Log.i("LifeCycle", "FragmentA: onDestroyView")
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         Log.i("LifeCycle", "FragmentA: onDestroy")
@@ -78,20 +81,21 @@ class SenderFragment : Fragment() {
     }
 
     private fun initSendBtn() {
-        val data = Bundle()
-        data.putString(MESSAGE_KEY, "Hi, i am from Fragment One")
-        receiverFragment.arguments = data
-
         view?.findViewById<Button>(R.id.receiverBtn)?.setOnClickListener {
-            parentFragmentManager.beginTransaction().replace(id, receiverFragment)
+            parentFragmentManager
+                .beginTransaction()
+                .replace(id, ReceiverFragment.newInstance())
                 .addToBackStack("replaceSendFrg").commit()
         }
     }
 
     private fun initReplaceBtn() {
         view?.findViewById<Button>(R.id.replaceFrg)?.setOnClickListener {
-            val replaceTrans = parentFragmentManager.beginTransaction().replace(id, receiverFragment)
-            if (addToBackStack.isChecked) {
+            val replaceTrans = parentFragmentManager
+                .beginTransaction()
+                .replace(id, ReceiverFragment.newInstance())
+            val checkBox: CheckBox = requireView().findViewById(R.id.addToBackStackCheck)
+            if (checkBox.isChecked) {
                 replaceTrans.addToBackStack("replaceFrg")
             }
             replaceTrans.commit()
@@ -100,15 +104,14 @@ class SenderFragment : Fragment() {
 
     private fun initAddBtn() {
         view?.findViewById<Button>(R.id.addFrg)?.setOnClickListener {
-            val addTrans = parentFragmentManager.beginTransaction().add(id, receiverFragment)
-            if (addToBackStack.isChecked) {
+            val addTrans = parentFragmentManager
+                .beginTransaction()
+                .add(id, ReceiverFragment.newInstance())
+            val checkBox: CheckBox = requireView().findViewById(R.id.addToBackStackCheck)
+            if (checkBox.isChecked) {
                 addTrans.addToBackStack("addFrg")
             }
             addTrans.commit()
         }
-    }
-
-    companion object {
-        val MESSAGE_KEY = "message"
     }
 }

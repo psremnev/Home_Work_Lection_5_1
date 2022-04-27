@@ -12,10 +12,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 
 class ReceiverFragment: Fragment() {
-    private val model: ReceiverFragmentModel by lazy { ViewModelProvider(requireActivity())[ReceiverFragmentModel::class.java] }
-    val messageView: TextView by lazy { requireView().findViewById(R.id.message) }
-    val readBtn: Button by lazy { requireView().findViewById(R.id.readBtn) }
-
     override fun onAttach(context: Context) {
         super.onAttach(context)
         Log.i("LifeCycle", "FragmentB: onAttach")
@@ -38,9 +34,13 @@ class ReceiverFragment: Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         Log.i("LifeCycle", "FragmentB: onViewCreated")
-        
+
+        val model: ReceiverFragmentModel = ViewModelProvider(requireActivity())[ReceiverFragmentModel::class.java]
+        if (savedInstanceState != null) {
+            initModel(model)
+        }
         initMessageView()
-        initReadBtn()
+        initReadBtn(model)
     }
 
     override fun onStart() {
@@ -68,6 +68,11 @@ class ReceiverFragment: Fragment() {
         Log.i("LifeCycle", "FragmentB: onSaveInstanceState")
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        Log.i("LifeCycle", "FragmentB: onDestroyView")
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         Log.i("LifeCycle", "FragmentB: onDestroy")
@@ -78,27 +83,35 @@ class ReceiverFragment: Fragment() {
         Log.i("LifeCycle", "FragmentB: onDetach")
     }
 
-    private fun initMessageView() {
-        if (model.readBtnVisibility == View.VISIBLE) {
-            model.message.value = arguments?.getString(SenderFragment.MESSAGE_KEY)
-        }
-        messageView.text = model.message.value
+    private fun initModel(model:ReceiverFragmentModel) {
+        model.message.value = arguments?.getString(MESSAGE_KEY)
     }
 
-    private fun initReadBtn() {
+    private fun initMessageView() {
+        requireView().findViewById<TextView>(R.id.message).text = arguments?.getString(MESSAGE_KEY)
+    }
+
+    private fun initReadBtn(model: ReceiverFragmentModel) {
+        val readBtn: Button = requireView().findViewById(R.id.readBtn)
         readBtn.visibility = model.readBtnVisibility
 
-        if (readBtn.visibility == View.VISIBLE) {
-            readBtn.setOnClickListener {
-                messageView.text = allReadMessage
-                model.message.value = allReadMessage
-                it.visibility = View.GONE
-                model.readBtnVisibility = View.GONE
-            }
+        readBtn.setOnClickListener {
+            requireView().findViewById<TextView>(R.id.message).text = allReadMessage
+            model.message.value = allReadMessage
+            it.visibility = View.GONE
+            model.readBtnVisibility = View.GONE
         }
     }
 
     companion object {
-        val allReadMessage = "All messages is read"
+        fun newInstance(): ReceiverFragment {
+            val receiverFragment = ReceiverFragment()
+            val data = Bundle()
+            data.putString(MESSAGE_KEY, "Hi, i am from Fragment One")
+            receiverFragment.arguments = data
+            return receiverFragment
+        }
+        private const val MESSAGE_KEY = "message"
+        private const val allReadMessage = "All messages is read"
     }
 }
