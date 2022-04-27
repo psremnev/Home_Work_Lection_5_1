@@ -36,11 +36,13 @@ class ReceiverFragment: Fragment() {
         Log.i("LifeCycle", "FragmentB: onViewCreated")
 
         val model: ReceiverFragmentModel = ViewModelProvider(requireActivity())[ReceiverFragmentModel::class.java]
-        if (savedInstanceState != null) {
+        if (savedInstanceState == null) {
             initModel(model)
         }
         initMessageView()
         initReadBtn(model)
+        observeOnMessageChange(model)
+        observeOnReadBtnVisibility(model)
     }
 
     override fun onStart() {
@@ -83,8 +85,21 @@ class ReceiverFragment: Fragment() {
         Log.i("LifeCycle", "FragmentB: onDetach")
     }
 
+    private fun observeOnMessageChange(model: ReceiverFragmentModel) {
+        model.message.observe(viewLifecycleOwner) {
+            requireView().findViewById<TextView>(R.id.message).text = it
+        }
+    }
+
+    private fun observeOnReadBtnVisibility(model: ReceiverFragmentModel) {
+        model.readBtnVisibility.observe(viewLifecycleOwner) {
+            requireView().findViewById<Button>(R.id.readBtn).visibility = it
+        }
+    }
+
     private fun initModel(model:ReceiverFragmentModel) {
         model.message.value = arguments?.getString(MESSAGE_KEY)
+        model.readBtnVisibility.value = View.VISIBLE
     }
 
     private fun initMessageView() {
@@ -92,14 +107,9 @@ class ReceiverFragment: Fragment() {
     }
 
     private fun initReadBtn(model: ReceiverFragmentModel) {
-        val readBtn: Button = requireView().findViewById(R.id.readBtn)
-        readBtn.visibility = model.readBtnVisibility
-
-        readBtn.setOnClickListener {
-            requireView().findViewById<TextView>(R.id.message).text = allReadMessage
+        requireView().findViewById<Button>(R.id.readBtn).setOnClickListener {
             model.message.value = allReadMessage
-            it.visibility = View.GONE
-            model.readBtnVisibility = View.GONE
+            model.readBtnVisibility.value = View.GONE
         }
     }
 
@@ -112,6 +122,6 @@ class ReceiverFragment: Fragment() {
             return receiverFragment
         }
         private const val MESSAGE_KEY = "message"
-        private const val allReadMessage = "All messages is read"
+        private const val allReadMessage: String = "All messages is read"
     }
 }
